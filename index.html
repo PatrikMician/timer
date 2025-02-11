@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digitální Hodiny</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+        .clock-container, .stopwatch-container, .timer-container {
+            margin: 50px auto;
+            padding: 20px;
+            display: none;
+            border-radius: 15px;
+            background-color: lightgray;
+        }
+        .active {
+            display: inline-block;
+        }
+        .clock, .stopwatch, .timer {
+            font-size: 48px;
+            font-weight: bold;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1><u>Hodiny:</u></h1>
+    <div>
+        <button onclick="showSection('clock')">Hodiny</button>
+        <button onclick="showSection('stopwatch')">Stopky</button>
+        <button onclick="showSection('timer')">Časovač</button>
+    </div>
+
+    <div>
+        <button onclick="changeBackgroundColor()">Barva pozadí</button>
+        <button onclick="changeTextColor()">Barva písma</button>
+        <button onclick="changeBoxColor()">Pozadí hodin</button>
+    </div>
+
+    <div class="clock-container active" id="clockContainer">
+        <div class="clock" id="clock">HH:MM:SS</div>
+    </div>
+
+    <div class="stopwatch-container" id="stopwatchContainer">
+        <div class="stopwatch" id="stopwatch">00:00:00.00</div>
+        <button onclick="startStopwatch()">Start</button>
+        <button onclick="stopStopwatch()">Stop</button>
+        <button onclick="resetStopwatch()">Reset</button>
+    </div>
+
+    <div class="timer-container" id="timerContainer">
+        <input type="number" id="timerInput" placeholder="Zadej sekundy">
+        <button onclick="startTimer()">Start</button>
+        <button onclick="stopTimer()">Stop</button>
+        <button onclick="resetTimer()">Reset</button>
+        <audio id="alarmSound"></audio>
+        <input type="file" id="audioUpload" accept="audio/*" onchange="uploadAudio(event)">
+        <div class="timer" id="timer">00:00.00</div>
+    </div>
+
+    <script>
+        function showSection(section) {
+            document.querySelectorAll('.clock-container, .stopwatch-container, .timer-container').forEach(el => el.classList.remove('active'));
+            document.getElementById(section + 'Container').classList.add('active');
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById("clock").innerText = now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        let stopwatchInterval, stopwatchTime = 0;
+
+        function startStopwatch() {
+            stopwatchInterval = setInterval(() => {
+                stopwatchTime += 10;
+                let time = new Date(stopwatchTime).toISOString().substr(11, 11);
+                document.getElementById("stopwatch").innerText = time;
+            }, 10);
+        }
+
+        function stopStopwatch() { clearInterval(stopwatchInterval); }
+        function resetStopwatch() { stopStopwatch(); stopwatchTime = 0; document.getElementById("stopwatch").innerText = "00:00:00.00"; }
+
+        let timerInterval, timerTime;
+
+        function startTimer() {
+            timerTime = parseFloat(document.getElementById("timerInput").value) * 100;
+            if (isNaN(timerTime) || timerTime <= 0) return;
+            timerInterval = setInterval(() => {
+                if (timerTime > 0) {
+                    timerTime--;
+                    let minutes = String(Math.floor(timerTime / 6000)).padStart(2, '0');
+                    let seconds = String(Math.floor((timerTime % 6000) / 100)).padStart(2, '0');
+                    let milliseconds = String(timerTime % 100).padStart(2, '0');
+                    document.getElementById("timer").innerText = `${minutes}:${seconds}.${milliseconds}`;
+                } else {
+                    clearInterval(timerInterval);
+                    document.getElementById("alarmSound").play();
+                }
+            }, 10);
+        }
+
+        function stopTimer() { clearInterval(timerInterval); }
+        function resetTimer() { stopTimer(); document.getElementById("timer").innerText = "00:00.00"; }
+
+        function uploadAudio(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById("alarmSound").src = URL.createObjectURL(file);
+            }
+        }
+
+        function changeBackgroundColor() {
+            const color = prompt("Zadejte barvu pozadí:");
+            if (color) document.body.style.backgroundColor = color;
+        }
+
+        function changeTextColor() {
+            const color = prompt("Zadejte barvu písma:");
+            if (color) document.querySelectorAll(".clock, .stopwatch, .timer").forEach(el => el.style.color = color);
+        }
+
+        function changeBoxColor() {
+            const color = prompt("Zadejte barvu pozadí hodin:");
+            if (color) document.querySelectorAll(".clock-container, .stopwatch-container, .timer-container").forEach(el => el.style.backgroundColor = color);
+        }
+    </script>
+</body>
+</html>
